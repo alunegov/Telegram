@@ -56,8 +56,6 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.exoplayer2.util.Log;
-
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.ChatObject;
@@ -403,6 +401,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
     private AnimatorSet floatingDateAnimation;
     private Runnable hideFloatingDateRunnable = () -> hideFloatingDateView(true);
     private ArrayList<View> actionModeViews = new ArrayList<>();
+    private HintView noForwardsHintView = null;
 
     private float additionalFloatingTranslation;
 
@@ -420,6 +419,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
 
     private SparseArray<MessageObject>[] selectedFiles = new SparseArray[]{new SparseArray<>(), new SparseArray<>()};
     private int cantDeleteMessagesCount;
+    private int cantForwardMessagesCount;
     private boolean scrolling;
     private long mergeDialogId;
     private TLRPC.ChatFull info;
@@ -1109,6 +1109,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         actionBar = profileActivity.getActionBar();
         mediaColumnsCount = SharedConfig.mediaColumnsCount;
 
+        profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.chatInfoDidLoad);
         profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.mediaDidLoad);
         profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.messagesDeleted);
         profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.didReceiveNewMessages);
@@ -1156,6 +1157,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             selectedFiles[a].clear();
         }
         cantDeleteMessagesCount = 0;
+        cantForwardMessagesCount = 0;
         actionModeViews.clear();
 
         final ActionBarMenu menu = actionBar.createMenu();
@@ -2846,6 +2848,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
     }
 
     public void onDestroy() {
+        profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.chatInfoDidLoad);
         profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.mediaDidLoad);
         profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.didReceiveNewMessages);
         profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.messagesDeleted);
@@ -3028,8 +3031,27 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                 showActionMode(false);
                 actionBar.closeSearchField();
                 cantDeleteMessagesCount = 0;
+                cantForwardMessagesCount = 0;
             }, null);
         } else if (id == forward) {
+            if (cantForwardMessagesCount != 0) {
+                if (noForwardsHintView == null) {
+                    TLRPC.Chat currentChat = null;
+                    if (DialogObject.isChatDialog(dialog_id)) {
+                        currentChat = profileActivity.getMessagesController().getChat(-dialog_id);
+                    }
+
+                    FrameLayout frameLayout = (FrameLayout) profileActivity.getFragmentView();
+
+                    noForwardsHintView = new HintView(frameLayout.getContext(), 4);
+                    noForwardsHintView.setText(ChatObject.isChannel(currentChat) ? LocaleController.getString("ForwardsRestricted", R.string.ForwardsRestricted) : LocaleController.getString("ForwardsRestrictedGroup", R.string.ForwardsRestrictedGroup));
+                    noForwardsHintView.setAlpha(0.0f);
+                    noForwardsHintView.setVisibility(View.INVISIBLE);
+                    frameLayout.addView(noForwardsHintView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 19, 0, 19, 0));
+                }
+                noForwardsHintView.showForView(forwardItem, true);
+                return;
+            }
             Bundle args = new Bundle();
             args.putBoolean("onlySelect", true);
             args.putInt("dialogsType", 3);
@@ -3050,6 +3072,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                     selectedFiles[a].clear();
                 }
                 cantDeleteMessagesCount = 0;
+                cantForwardMessagesCount = 0;
                 showActionMode(false);
 
                 if (dids.size() > 1 || dids.get(0) == profileActivity.getUserConfig().getClientUserId() || message != null) {
@@ -3425,6 +3448,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                 selectedFiles[a].clear();
             }
             cantDeleteMessagesCount = 0;
+            cantForwardMessagesCount = 0;
             showActionMode(false);
             updateRowsSelection();
             return true;
@@ -3454,6 +3478,8 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         }
         if (show) {
             actionModeLayout.setVisibility(VISIBLE);
+        } else {
+            hideSelectedFilesHints();
         }
         actionModeAnimation = new AnimatorSet();
         actionModeAnimation.playTogether(ObjectAnimator.ofFloat(actionModeLayout, View.ALPHA, show ? 1.0f : 0.0f));
@@ -3478,9 +3504,21 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         actionModeAnimation.start();
     }
 
+    public void hideSelectedFilesHints() {
+        if (noForwardsHintView != null) {
+            noForwardsHintView.hide();
+        }
+    }
+
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
-        if (id == NotificationCenter.mediaDidLoad) {
+        if (id == NotificationCenter.chatInfoDidLoad) {
+            TLRPC.ChatFull chatFull = (TLRPC.ChatFull) args[0];
+            if (chatFull.id == -dialog_id) {
+                // noforwards
+                recalcSelectedFilesUi();
+            }
+        } else if (id == NotificationCenter.mediaDidLoad) {
             long uid = (Long) args[0];
             int guid = (Integer) args[3];
             int requestIndex = (Integer) args[7];
@@ -4416,14 +4454,12 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         }
         AndroidUtilities.hideKeyboard(profileActivity.getParentActivity().getCurrentFocus());
         selectedFiles[item.getDialogId() == dialog_id ? 0 : 1].put(item.getId(), item);
-        if (!item.canDeleteMessage(false, null)) {
-            cantDeleteMessagesCount++;
+        TLRPC.Chat chat = null;
+        if (DialogObject.isChatDialog(dialog_id)) {
+            chat = profileActivity.getMessagesController().getChat(-dialog_id);
         }
-        deleteItem.setVisibility(cantDeleteMessagesCount == 0 ? View.VISIBLE : View.GONE);
-        if (gotoItem != null) {
-            gotoItem.setVisibility(View.VISIBLE);
-        }
-        selectedMessagesCountTextView.setNumber(1, false);
+        onSelectedFilesAdd(item, chat);
+        updateSelectedFilesUi(false);
         AnimatorSet animatorSet = new AnimatorSet();
         ArrayList<Animator> animators = new ArrayList<>();
         for (int i = 0; i < actionModeViews.size(); i++) {
@@ -4460,29 +4496,26 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         }
         if (isActionModeShowed) {
             int loadIndex = message.getDialogId() == dialog_id ? 0 : 1;
+            TLRPC.Chat chat = null;
+            if (DialogObject.isChatDialog(dialog_id)) {
+                chat = profileActivity.getMessagesController().getChat(-dialog_id);
+            }
             if (selectedFiles[loadIndex].indexOfKey(message.getId()) >= 0) {
                 selectedFiles[loadIndex].remove(message.getId());
                 if (!message.canDeleteMessage(false, null)) {
                     cantDeleteMessagesCount--;
+                }
+                if (/*chatMode == MODE_SCHEDULED || */!message.canForwardMessage(chat)) {
+                    cantForwardMessagesCount--;
                 }
             } else {
                 if (selectedFiles[0].size() + selectedFiles[1].size() >= 100) {
                     return;
                 }
                 selectedFiles[loadIndex].put(message.getId(), message);
-                if (!message.canDeleteMessage(false, null)) {
-                    cantDeleteMessagesCount++;
-                }
+                onSelectedFilesAdd(message, chat);
             }
-            if (selectedFiles[0].size() == 0 && selectedFiles[1].size() == 0) {
-                showActionMode(false);
-            } else {
-                selectedMessagesCountTextView.setNumber(selectedFiles[0].size() + selectedFiles[1].size(), true);
-                deleteItem.setVisibility(cantDeleteMessagesCount == 0 ? View.VISIBLE : View.GONE);
-                if (gotoItem != null) {
-                    gotoItem.setVisibility(selectedFiles[0].size() == 1 ? View.VISIBLE : View.GONE);
-                }
-            }
+            updateSelectedFilesUi(true);
             scrolling = false;
             if (view instanceof SharedDocumentCell) {
                 ((SharedDocumentCell) view).setChecked(selectedFiles[loadIndex].indexOfKey(message.getId()) >= 0, true);
@@ -4570,6 +4603,57 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                 } catch (Exception e) {
                     FileLog.e(e);
                 }
+            }
+        }
+    }
+
+    private void recalcSelectedFilesUi() {
+        if (!isActionModeShowed) {
+            return;
+        }
+
+        TLRPC.Chat chat = null;
+        if (DialogObject.isChatDialog(dialog_id)) {
+            chat = profileActivity.getMessagesController().getChat(-dialog_id);
+        }
+
+        cantDeleteMessagesCount = 0;
+        cantForwardMessagesCount = 0;
+
+        // kinda onItemClick while adding file
+        for (int a = 1; a >= 0; a--) {
+            for (int i = 0; i < selectedFiles[a].size(); i++) {
+                final MessageObject item = selectedFiles[a].valueAt(i);
+                onSelectedFilesAdd(selectedFiles[a].valueAt(i), chat);
+            }
+        }
+
+        updateSelectedFilesUi(true);
+        if (cantForwardMessagesCount == 0) {
+            hideSelectedFilesHints();
+        }
+    }
+
+    private void onSelectedFilesAdd(MessageObject message, TLRPC.Chat chat) {
+        if (!message.canDeleteMessage(false, null)) {
+            cantDeleteMessagesCount++;
+        }
+        if (/*chatMode == MODE_SCHEDULED || */!message.canForwardMessage(chat)) {
+            cantForwardMessagesCount++;
+        }
+    }
+
+    private void updateSelectedFilesUi(boolean animated) {
+        if (selectedFiles[0].size() == 0 && selectedFiles[1].size() == 0) {
+            showActionMode(false);
+        } else {
+            selectedMessagesCountTextView.setNumber(selectedFiles[0].size() + selectedFiles[1].size(), animated);
+            deleteItem.setVisibility(cantDeleteMessagesCount == 0 ? View.VISIBLE : View.GONE);
+            if (gotoItem != null) {
+                gotoItem.setVisibility(selectedFiles[0].size() == 1 ? View.VISIBLE : View.GONE);
+            }
+            if (forwardItem != null) {
+                forwardItem.setAlpha(cantForwardMessagesCount == 0 ? 1.0f : 0.5f);
             }
         }
     }

@@ -589,8 +589,10 @@
     <string name="GroupSettingsTitle">Group Settings</string>
     <string name="ChannelSettingsTitle">Channel Settings</string>
     <string name="TypePrivate">Private</string>
+    <string name="TypePrivateRestricted">Private restricted</string>
     <string name="TypePublic">Public</string>
     <string name="TypePrivateGroup">Private</string>
+    <string name="TypePrivateRestrictedGroup">Private restricted</string>
     <string name="TypePublicGroup">Public</string>
     <string name="TypeLocationGroup">Link</string>
     <string name="TypeLocationGroupEdit">Tap to add a permanent link</string>
@@ -641,6 +643,10 @@
     <string name="SlowmodeSendErrorTooLong">Sorry, this text is too long to send as one message.\n\nSlow Mode is enabled. You can\'t send more than one message at once.</string>
     <string name="UserSetAsAdminHint">**%1$s** promoted to admin</string>
     <string name="UserRemovedFromChatHint">**%1$s** removed from **%2$s**</string>
+    <string name="NoForwardsHeader">Saving content</string>
+    <string name="NoForwardsTextCheck">Restrict saving content</string>
+    <string name="NoForwardsInfoChannel">Participants won’t be able to forward messages from this channel or save media files.</string>
+    <string name="NoForwardsInfoGroup">Participants won’t be able to forward messages from this group or save media files.</string>
     <!--polls-->
     <string name="NewPoll">New Poll</string>
     <string name="NewQuiz">New Quiz</string>
@@ -826,6 +832,8 @@
     <string name="EventLogVoiceChatUnmuted">un1 unmuted un2</string>
     <string name="EventLogVoiceChatAllowedToSpeak">un1 allowed new participants to speak</string>
     <string name="EventLogVoiceChatNotAllowedToSpeak">un1 muted new participants</string>
+    <string name="EventLogToggledNoForwardsOn">un1 disabled saving content</string>
+    <string name="EventLogToggledNoForwardsOff">un1 enabled saving content</string>
     <!--broadcasts-->
     <string name="NewBroadcastList">New Broadcast List</string>
     <string name="EnterListName">Enter list name</string>
@@ -1233,6 +1241,8 @@
     <string name="HiddenSendersNameDescription">Sender names removed</string>
     <string name="ForwardingFromNameAndMessage">%s: %s</string>
     <string name="ForwardingFromNames">From %s</string>
+    <string name="ForwardsRestricted">Forwards from this channel are restricted.</string>
+    <string name="ForwardsRestrictedGroup">Forwards from this group are restricted.</string>
     <!--notification-->
     <string name="MessageLifetimeChanged">%1$s set the self-destruct timer to %2$s</string>
     <string name="MessageLifetimeChangedOutgoing">You set the self-destruct timer to %1$s</string>

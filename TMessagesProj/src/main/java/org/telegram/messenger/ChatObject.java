@@ -1613,6 +1613,10 @@ public class ChatObject {
         return hasPhoto(chat) ? chat.photo : null;
     }
 
+    public static boolean canForwardMessages(TLRPC.Chat chat) {
+        return chat == null || !chat.noforwards;
+    }
+
     public static class VideoParticipant {
 
         public TLRPC.TL_groupCallParticipant participant;

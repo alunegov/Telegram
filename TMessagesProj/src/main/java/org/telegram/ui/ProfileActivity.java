@@ -3194,6 +3194,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (participantsMap != null && !usersEndReached && layoutManager.findLastVisibleItemPosition() > membersEndRow - 8) {
                     getChannelParticipants(false);
                 }
+                if (dy != 0) {
+                    sharedMediaLayout.hideSelectedFilesHints();
+                }
             }
         });
 
@@ -4609,8 +4612,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     @SuppressWarnings("unchecked")
     @Override
     public void didReceivedNotification(int id, int account, final Object... args) {
+        Log.d("ProfileActivity", String.format("didReceivedNotification id=%d", id));
         if (id == NotificationCenter.updateInterfaces) {
             int mask = (Integer) args[0];
+            Log.d("ProfileActivity", String.format("updateInterfaces with mask=%d", mask));
             boolean infoChanged = (mask & MessagesController.UPDATE_MASK_AVATAR) != 0 || (mask & MessagesController.UPDATE_MASK_NAME) != 0 || (mask & MessagesController.UPDATE_MASK_STATUS) != 0;
             if (userId != 0) {
                 if (infoChanged) {
@@ -4696,6 +4701,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
         } else if (id == NotificationCenter.chatInfoDidLoad) {
             TLRPC.ChatFull chatFull = (TLRPC.ChatFull) args[0];
+            Log.d("ProfileActivity", String.format("chatInfoDidLoad with id=%d", chatFull.id));
             if (chatFull.id == chatId) {
                 boolean byChannelUsers = (Boolean) args[2];
                 if (chatInfo instanceof TLRPC.TL_channelFull) {

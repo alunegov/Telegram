@@ -1042,6 +1042,7 @@ public class ActionBarLayout extends FrameLayout {
         if (fragment == null || checkTransitionAnimation() || delegate != null && check && !delegate.needPresentFragment(fragment, removeLast, forceWithoutAnimation, this) || !fragment.onFragmentCreate()) {
             return false;
         }
+        Log.d("ABL", String.format("Presenting %s", fragment.getClass().getCanonicalName()));
         fragment.setInPreviewMode(preview);
         if (parentActivity.getCurrentFocus() != null && fragment.hideKeyboardOnShow() && !preview) {
             AndroidUtilities.hideKeyboard(parentActivity.getCurrentFocus());

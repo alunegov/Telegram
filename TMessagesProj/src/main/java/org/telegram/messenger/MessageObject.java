@@ -1841,6 +1841,12 @@ public class MessageObject {
             messageText = replaceWithLink(LocaleController.getString("JoinedViaInviteLinkApproved", R.string.JoinedViaInviteLinkApproved), "un1", fromUser);
             messageText = replaceWithLink(messageText, "un2", action.invite);
             messageText = replaceWithLink(messageText, "un3", MessagesController.getInstance(currentAccount).getUser(action.approved_by));
+        } else if (event.action instanceof TLRPC.TL_channelAdminLogEventActionToggleNoForwards) {
+            if (((TLRPC.TL_channelAdminLogEventActionToggleNoForwards) event.action).new_value) {
+                messageText = replaceWithLink(LocaleController.getString("EventLogToggledNoForwardsOn", R.string.EventLogToggledNoForwardsOn), "un1", fromUser);
+            } else {
+                messageText = replaceWithLink(LocaleController.getString("EventLogToggledNoForwardsOff", R.string.EventLogToggledNoForwardsOff), "un1", fromUser);
+            }
         } else {
             messageText = "unsupported " + event.action;
         }
@@ -5678,8 +5684,9 @@ public class MessageObject {
         return canEditMessageScheduleTime(currentAccount, messageOwner, chat);
     }
 
-    public boolean canForwardMessage() {
-        return !(messageOwner instanceof TLRPC.TL_message_secret) && !needDrawBluredPreview() && !isLiveLocation() && type != 16 && !isSponsored();
+    public boolean canForwardMessage(TLRPC.Chat chat) {
+        return !(messageOwner instanceof TLRPC.TL_message_secret) && !needDrawBluredPreview() && !isLiveLocation()
+                && type != 16 && !isSponsored() && ChatObject.canForwardMessages(chat);
     }
 
     public boolean canEditMedia() {

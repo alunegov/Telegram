@@ -3146,6 +3146,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 drawPinnedTop = pinnedTop && (currentPosition == null || (currentPosition.flags & MessageObject.POSITION_FLAG_TOP) != 0);
                 drawPinnedBottom = pinnedBottom && (currentPosition == null || (currentPosition.flags & MessageObject.POSITION_FLAG_BOTTOM) != 0);
             }
+            updateCurrentUserAndChat();
 
             isPlayingRound = isRoundVideo && MediaController.getInstance().isPlayingMessage(currentMessageObject) && delegate != null && !delegate.keyboardIsOpened() && !delegate.isLandscape();
             photoImage.setCrossfadeWithOldImage(false);
@@ -4958,7 +4959,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                         }
                         docTitleLayout = new StaticLayout(TextUtils.ellipsize(LocaleController.getString("AttachLiveLocation", R.string.AttachLiveLocation), Theme.chat_locationTitlePaint, maxWidth, TextUtils.TruncateAt.END), Theme.chat_locationTitlePaint, maxWidth + AndroidUtilities.dp(2), Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
 
-                        updateCurrentUserAndChat();
+                        //updateCurrentUserAndChat();
                         if (currentUser != null) {
                             contactAvatarDrawable.setInfo(currentUser);
                             locationImageReceiver.setForUserOrChat(currentUser, contactAvatarDrawable);
@@ -9606,6 +9607,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             if (!currentMessagesGroup.isDocuments && !currentPosition.last) {
                 return false;
             }
+        }
+        if (!ChatObject.canForwardMessages(currentChat)) {
+            return false;
         }
         return messageObject.needDrawShareButton();
     }
