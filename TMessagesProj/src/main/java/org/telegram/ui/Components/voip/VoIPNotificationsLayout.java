@@ -42,6 +42,7 @@ public class VoIPNotificationsLayout extends LinearLayout {
     boolean lockAnimation;
     boolean wasChanged;
     Runnable onViewsUpdated;
+    private int notificationBackgroundColor = ColorUtils.setAlphaComponent(Color.BLACK, (int) (255 * 0.4f));
 
     public VoIPNotificationsLayout(Context context) {
         super(context);
@@ -70,6 +71,10 @@ public class VoIPNotificationsLayout extends LinearLayout {
         }
     }
 
+    public void setNotificationBackgroundColor(int backgroundColor) {
+        this.notificationBackgroundColor = backgroundColor;
+    }
+
     public void addNotification(int iconRes, String text, String tag, boolean animated) {
         if (viewsByTag.get(tag) != null) {
             return;
@@ -77,7 +82,12 @@ public class VoIPNotificationsLayout extends LinearLayout {
 
         NotificationView view = new NotificationView(getContext());
         view.tag = tag;
-        view.iconView.setImageResource(iconRes);
+        view.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(16), notificationBackgroundColor));
+        if (iconRes != 0) {
+            view.iconView.setImageResource(iconRes);
+        } else {
+            view.textView.setLayoutParams(LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 16, 4, 16, 4));
+        }
         view.textView.setText(text);
         viewsByTag.put(tag, view);
 
@@ -192,8 +202,9 @@ public class VoIPNotificationsLayout extends LinearLayout {
             setFocusable(true);
             setFocusableInTouchMode(true);
 
-            iconView = new ImageView(context);
             setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(16), ColorUtils.setAlphaComponent(Color.BLACK, (int) (255 * 0.4f))));
+
+            iconView = new ImageView(context);
             addView(iconView, LayoutHelper.createFrame(24, 24, 0, 10, 4, 10, 4));
 
             textView = new TextView(context);

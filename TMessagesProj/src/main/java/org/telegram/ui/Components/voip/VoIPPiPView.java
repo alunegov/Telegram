@@ -43,6 +43,7 @@ import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.VoIPFragment;
+import org.telegram.ui.VoIPFragment2;
 
 public class VoIPPiPView implements VoIPService.StateListener, NotificationCenter.NotificationCenterDelegate {
 
@@ -341,7 +342,7 @@ public class VoIPPiPView implements VoIPService.StateListener, NotificationCente
 
             enlargeIcon.setOnClickListener((v) -> {
                 if (context instanceof LaunchActivity && !ApplicationLoader.mainInterfacePaused) {
-                    VoIPFragment.show((Activity) context, currentAccount);
+                    VoIPFragment2.show((Activity) context, currentAccount);
                 } else if (context instanceof LaunchActivity) {
                     Intent intent = new Intent(context, LaunchActivity.class);
                     intent.setAction("voip");
@@ -596,7 +597,7 @@ public class VoIPPiPView implements VoIPService.StateListener, NotificationCente
                     if (event.getAction() == MotionEvent.ACTION_UP && !moving && System.currentTimeMillis() - startTime < 150) {
                         Context context = getContext();
                         if (context instanceof LaunchActivity && !ApplicationLoader.mainInterfacePaused) {
-                            VoIPFragment.show((Activity) context, currentAccount);
+                            VoIPFragment2.show((Activity) context, currentAccount);
                         } else if (context instanceof LaunchActivity) {
                             Intent intent = new Intent(context, LaunchActivity.class);
                             intent.setAction("voip");

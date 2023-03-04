@@ -250,7 +250,7 @@ public class BubbleActivity extends BasePermissionsActivity implements INavigati
             fragment.onRequestPermissionsResultFragment(requestCode, permissions, grantResults);
         }
 
-        VoIPFragment.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        VoIPFragment2.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override

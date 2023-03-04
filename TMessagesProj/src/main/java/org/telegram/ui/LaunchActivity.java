@@ -2983,7 +2983,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             }
         }
         if (isVoipIntent) {
-            VoIPFragment.show(this, intentAccount[0]);
+            VoIPFragment2.show(this, intentAccount[0]);
         }
         if (!showGroupVoip && (intent == null || !Intent.ACTION_MAIN.equals(intent.getAction())) && GroupCallActivity.groupCallInstance != null) {
             GroupCallActivity.groupCallInstance.dismiss();
@@ -5290,7 +5290,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             }
         }
 
-        VoIPFragment.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        VoIPFragment2.onRequestPermissionsResult(requestCode, permissions, grantResults);
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.onRequestPermissionResultReceived, requestCode, permissions, grantResults);
 
         if (requestedPermissions.get(requestCode, -1) >= 0) {
@@ -5350,8 +5350,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             PhotoViewer.getInstance().onPause();
         }
 
-        if (VoIPFragment.getInstance() != null) {
-            VoIPFragment.onPause();
+        if (VoIPFragment2.getInstance() != null) {
+            VoIPFragment2.onPause();
         }
     }
 
@@ -5515,8 +5515,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ApplicationLoader.canDrawOverlays = Settings.canDrawOverlays(this);
         }
-        if (VoIPFragment.getInstance() != null) {
-            VoIPFragment.onResume();
+        if (VoIPFragment2.getInstance() != null) {
+            VoIPFragment2.onResume();
         }
         invalidateTabletMode();
     }

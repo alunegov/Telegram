@@ -115,6 +115,7 @@ import org.telegram.ui.Components.voip.VoIPHelper;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.VoIPFeedbackActivity;
 import org.telegram.ui.VoIPFragment;
+import org.telegram.ui.VoIPFragment2;
 import org.telegram.ui.VoIPPermissionActivity;
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
@@ -1121,8 +1122,8 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 			} else {
 				requestVideoCall(true);
 				setVideoState(true, Instance.VIDEO_STATE_ACTIVE);
-				if (VoIPFragment.getInstance() != null) {
-					VoIPFragment.getInstance().onScreenCastStart();
+				if (VoIPFragment2.getInstance() != null) {
+					VoIPFragment2.getInstance().onScreenCastStart();
 				}
 			}
 		} else {
