@@ -26,6 +26,7 @@ import org.telegram.ui.Cells.ChatMessageCell;
 import org.telegram.ui.ChatActivity;
 import org.telegram.ui.Components.ChatGreetingsView;
 import org.telegram.ui.Components.CubicBezierInterpolator;
+import org.telegram.ui.Components.MessageDeleteEffect;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.TextMessageEnterTransition;
 import org.telegram.ui.VoiceMessageEnterTransition;
@@ -1377,11 +1378,23 @@ public class ChatListItemAnimator extends DefaultItemAnimator {
             FileLog.d("animate remove impl");
         }
         final View view = holder.itemView;
+
+        float startAlpha = view.getAlpha();
+        long stubAnimStartDelay = 0;
+        if (view instanceof ChatMessageCell) {
+            MessageDeleteEffect deleteEffect = new MessageDeleteEffect();
+            if (deleteEffect.attach((ChatMessageCell) view)) {
+                startAlpha = 0f;
+                stubAnimStartDelay = 500;
+            }
+        }
+
         mRemoveAnimations.add(holder);
-        ObjectAnimator animator = ObjectAnimator.ofFloat(view, View.ALPHA, view.getAlpha(), 0f);
+        ObjectAnimator animator = ObjectAnimator.ofFloat(view, View.ALPHA, startAlpha, 0f);
 
         dispatchRemoveStarting(holder);
 
+        animator.setStartDelay(stubAnimStartDelay);
         animator.setDuration(getRemoveDuration());
         animator.addListener(
                 new AnimatorListenerAdapter() {
